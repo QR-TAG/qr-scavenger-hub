@@ -5,13 +5,11 @@ from datetime import datetime
 import sys
 import time
 import threading
-from HubBluetooth import HubBluetooth
 import subprocess
 from SerialWatch import SerialWatch
 import requests
 import json
 
-hubBluetooth = HubBluetooth()
 serialWatch = SerialWatch()
 button_down_time = 0
 print("--------------------test------------------------")
@@ -67,9 +65,6 @@ GPIO.add_event_detect(7, GPIO.BOTH, callback=button_callback)
 start_time = time.time()
 
 try:
-    bluetoothThread = threading.Thread(target=hubBluetooth.start)
-    bluetoothThread.start()
-    # serialWatch.riddle = "tesssst"
     serialThread = threading.Thread(target=serialWatch.run)
     serialThread.start()
     while True:
@@ -80,7 +75,11 @@ try:
             # ~ print("test")
             resp = requests.get("https://qrtag-tum.herokuapp.com/riddle").text
             text = json.loads(resp)
-            serialWatch.riddle = text['riddle']+'$'+text['qrcode']
+            new_riddle = text['riddle']+'$'+text['qrcode']
+            if serialWatch.riddle != new_riddle:
+                print("new riddle!")
+                serialWatch.riddle = new_riddle
+                serialWatch.update_riddle = True
             print("received from server: " + serialWatch.riddle)
                 # ~ serialWatch.riddle = requests.get("https://qr-scavange.herokuapp.com/").text
                 # ~ print("received riddle: " + serialWatch.riddle)
@@ -90,11 +89,9 @@ try:
         pass
 except KeyboardInterrupt:
     GPIO.cleanup() # Clean up
-    hubBluetooth.close()
     serialWatch.end()
-    bluetoothThread.join()
     serialThread.join()
     sys.exit(0)
 
-except:
-    print("error")
+except Exception as err:
+    print("error", err)

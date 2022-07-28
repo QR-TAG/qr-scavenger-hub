@@ -25,6 +25,7 @@ class SerialWatch:
         self.configuredPorts = []
         self.riddle = ""
         self.stop = False
+        self.update_riddle = False
 
     def run(self):
         self.stop = False
@@ -45,48 +46,23 @@ class SerialWatch:
                                 self.serialHandler.write(send)
                             except:
                                 print("write timeout")
-                            # print("test")
-                        
-                        # while(True):
-                        #     try:
-                        #         str = self.serialHandler.readLine()
-                        #         print "parsing: " + str
-                        #         json.loads(str)
-                        #     except KeyboardInterrupt:
-                        #         sys.exit()
-                        #     except:
-                        #         print "could not parse"
-                        #         continue
-                        #
-                        #     print "parsed: " + str
-                        #     break
-                        # str = ""
-                        # while(str == ""):
-                        #     str = self.serialHandler.readLine()
-
-                        # print("received: " + str)
-                        # id = str
-                        # str = ""
-                        # f = open("../homeAuto.conf", 'r')
-                        # config = json.loads(f.read())
-
-                        # send = json.dumps({"msg":"info", "data":[config["ssid"], config["wifiPass"], getLocalIP()]})
-                        # print("sending: " + send)
-                        # self.serialHandler.write(send)
-                        # str = ""
-                        # while (str == ""):
-                            # str = self.serialHandler.readLine()
-                        # print("received: " + str)
-                        # send = "{\"msg\": \"ok\"}"
-                        # print("sending: " + send)
-                        # self.serialHandler.write(send)
-
 
             for configuredPort in self.configuredPorts:
                 if configuredPort not in self.serialHandler.ports:
                     self.configuredPorts.remove(configuredPort)
                     print("removed: " + configuredPort)
-
+                    
+            if self.update_riddle:
+                self.update_riddle = False
+                for port in self.serialHandler.ports:
+                    self.serialHandler.begin(port, self.baudRate)
+                    send = self.riddle
+                    print("sending: " + send)
+                    try:
+                        time.sleep(2)
+                        self.serialHandler.write(send)
+                    except:
+                        print("write timeout")
             time.sleep(1)
 
     def end(self):
