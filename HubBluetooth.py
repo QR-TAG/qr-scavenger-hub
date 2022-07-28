@@ -14,5 +14,6 @@ class HubBluetooth(BluetoothServer):
         data = json.loads(message)
         WifiConnect.connect(data['ssid'], data['password'])
         # self.riddle = requests.get("https://qr-scavange.herokuapp.com/")
-        GPIO.output(13, 1)
+        GPIO.setmode(GPIO.BOARD)
+        GPIO.output(13, GPIO.LOW)
 #         self.send('LOW' if int(message) < 50 else 'HIGH')

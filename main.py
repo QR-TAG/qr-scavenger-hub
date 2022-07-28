@@ -9,13 +9,18 @@ from HubBluetooth import HubBluetooth
 import subprocess
 from SerialWatch import SerialWatch
 import requests
+import json
 
 hubBluetooth = HubBluetooth()
 serialWatch = SerialWatch()
 button_down_time = 0
+print("--------------------test------------------------")
 try:
-    serialWatch.riddle = requests.get("https://qr-scavange.herokuapp.com/").text
-    print("received riddle: " + serialWatch.riddle)
+    text = json.loads(requests.get("https://qrtag-tum.herokuapp.com/riddle").text)
+    serialWatch.riddle = text['riddle']+'$'+text['qrcode']
+    print(requests.get("https://qrtag-tum.herokuapp.com/riddle").text)
+    print("----------------------------")
+    print("received riddle: " + text)
 except:
     print("not connected")
 print(serialWatch.riddle)
@@ -54,16 +59,16 @@ GPIO.setup(7, GPIO.IN, pull_up_down=GPIO.PUD_UP) # Set pin 10 to be an input pin
 GPIO.setup(11, GPIO.OUT)
 GPIO.setup(13, GPIO.OUT)
 GPIO.setup(15, GPIO.OUT)
-GPIO.output(11, 1)
-GPIO.output(13, 1)
-GPIO.output(15, 1)
+GPIO.output(11, GPIO.LOW)
+GPIO.output(13, GPIO.HIGH)
+GPIO.output(15, GPIO.HIGH)
 GPIO.add_event_detect(7, GPIO.BOTH, callback=button_callback) 
 
 start_time = time.time()
 
 try:
     bluetoothThread = threading.Thread(target=hubBluetooth.start)
-    # bluetoothThread.start()
+    bluetoothThread.start()
     # serialWatch.riddle = "tesssst"
     serialThread = threading.Thread(target=serialWatch.run)
     serialThread.start()
@@ -71,11 +76,16 @@ try:
         now = time.time()
         if(now - start_time > 10):
             start_time = time.time()
-            try:
-                serialWatch.riddle = requests.get("https://qr-scavange.herokuapp.com/").text
-                print("received riddle: " + serialWatch.riddle)
-            except:
-                print("not connected")
+            # ~ try:
+            # ~ print("test")
+            resp = requests.get("https://qrtag-tum.herokuapp.com/riddle").text
+            text = json.loads(resp)
+            serialWatch.riddle = text['riddle']+'$'+text['qrcode']
+            print("received from server: " + serialWatch.riddle)
+                # ~ serialWatch.riddle = requests.get("https://qr-scavange.herokuapp.com/").text
+                # ~ print("received riddle: " + serialWatch.riddle)
+            # ~ except Error as e:
+                # ~ print(str(e))
         # print("test")
         pass
 except KeyboardInterrupt:

@@ -46,19 +46,19 @@ class BluetoothServer(object):
         os.system("hciconfig hci0 piscan")
 
         # Create a new server socket using RFCOMM protocol
-        server_sock = bt.BluetoothSocket(bt.RFCOMM)
+        self.server_sock = bt.BluetoothSocket(bt.RFCOMM)
 
         # Bind to any port
-        server_sock.bind(("", bt.PORT_ANY))
+        self.server_sock.bind(("", bt.PORT_ANY))
 
         # Start listening
-        server_sock.listen(1)
+        self.server_sock.listen(1)
 
         # Get the port the server socket is listening
-        port = server_sock.getsockname()[1]
+        port = self.server_sock.getsockname()[1]
 
         # Start advertising the service
-        bt.advertise_service(server_sock, "RaspiBtSrv",
+        bt.advertise_service(self.server_sock, "RaspiBtSrv",
                            service_id=self.uuid,
                            service_classes=[self.uuid, bt.SERIAL_PORT_CLASS],
                            profiles=[bt.SERIAL_PORT_PROFILE])
@@ -71,7 +71,7 @@ class BluetoothServer(object):
             try:
 
                 # This will block until we get a new connection
-                self.client_sock, client_info = server_sock.accept()
+                self.client_sock, client_info = self.server_sock.accept()
                 print("Accepted connection from " +  str(client_info))
 
                 # Track strings delimited by '.'
@@ -95,7 +95,7 @@ class BluetoothServer(object):
                 if self.client_sock is not None:
                     self.client_sock.close()
 
-                server_sock.close()
+                self.server_sock.close()
 
                 print("Server going down")
                 break
@@ -111,7 +111,7 @@ class BluetoothServer(object):
         self.stop = True
         if self.client_sock is not None:
             self.client_sock.close()
-
-        server_sock.close()
+        if self.server_sock is not None:
+            self.server_sock.close()
 
         print("Server going down")
